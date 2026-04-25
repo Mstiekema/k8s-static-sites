@@ -1,0 +1,53 @@
+github:
+  user: Mstiekema
+  secret: {}
+  # Only required if you have any private repositories
+  # secret:
+  #   name: github-deploy-secret
+  #   key: GITHUB_TOKEN
+
+gatewayApi:
+  parentRef:
+    name: gateway
+    namespace: networking
+
+nginx:
+  name: nginx-static
+  port: 80
+
+sites:
+  - name: example
+    repo: example-site
+    urls:
+      - example.com
+
+rustfs:
+  enabled: true
+
+  # Values for the rustfs chart
+  replicaCount: 1
+  mode:
+    standalone:
+      enabled: true
+      strategy:
+        type: RollingUpdate
+        rollingUpdate:
+          maxSurge: 0
+          maxUnavailable: 1
+      existingClaim:
+        dataClaim: "storage-pvc"
+        logsClaim: "storage-logs-pvc"
+    distributed:
+      enabled: false
+  secret:
+    existingSecret: "storage-secret"
+  config:
+    rustfs:
+      region: "eu-central-1"
+  ingress:
+    enabled: false
+  gatewayApi:
+    enabled: false
+  mtls:
+    enabled: false
+  affinity: {}

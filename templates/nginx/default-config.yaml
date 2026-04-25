@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: default-nginx-config
+data:
+  default.conf: |
+    server {
+      listen 80 default_server;
+      return 444;
+    }

@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.nginx.name }}
+spec:
+  replicas: 1
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      app: {{ .Values.nginx.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.nginx.name }}
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:alpine
+          resources:
+            limits:
+              memory: 512Mi
+              cpu: "1"
+            requests:
+              memory: 256Mi
+              cpu: "0.2"
+          ports:
+            - containerPort: {{ .Values.nginx.port }}
+          volumeMounts:
+            - name: default-nginx-config
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+
+          {{- range .Values.sites }}
+            - name: "{{ .name }}-nginx-config"
+              mountPath: "/etc/nginx/conf.d/{{ .name }}.conf"
+              subPath: "{{ .name }}.conf"
+          {{- end }}
+      volumes:
+        - name: default-nginx-config
+          configMap:
+            name: default-nginx-config
+
+      {{- range .Values.sites }}
+        - name: "{{ .name }}-nginx-config"
+          configMap:
+            name: "{{ .name }}-nginx-config"
+      {{- end }}

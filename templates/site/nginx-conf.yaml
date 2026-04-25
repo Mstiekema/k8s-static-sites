@@ -1,0 +1,27 @@
+{{- range .Values.sites }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ .name }}-nginx-config"
+data:
+  "{{ .name }}.conf": |
+    server {
+      listen {{ $.Values.nginx.port }};
+      server_name {{- range .urls }} {{ . }} {{- end }};
+
+      location ~* \.(js|css|jpg|jpeg|png|gif|ico|woff2?|svg|eot|ttf|map)$ {
+        rewrite ^.*(/assets/.+)$ /{{ .name }}$1 break;
+        proxy_pass http://{{ include "rustfs.url" $ }};
+        proxy_set_header Host {{ include "rustfs.url" $ }};
+      }
+
+      location / {
+        rewrite ^ /{{ .name }}/index.html break;
+        proxy_pass http://{{ include "rustfs.url" $ }};
+        proxy_set_header Host {{ include "rustfs.url" $ }};
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      }
+    }
+{{- end }}

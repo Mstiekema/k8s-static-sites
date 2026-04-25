@@ -1,0 +1,48 @@
+{{- range .Values.sites }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ .name }}-scripts"
+data:
+  create.sh: |
+    #!/bin/sh
+    rc alias set local http://{{ include "rustfs.url" $ }} $STORAGE_ACCESS_KEY $STORAGE_SECRET_KEY
+    rc mb local/{{ .name }}
+    rc anonymous set public local/{{ .name }}
+    printf "0000000" > commit
+    rc cp ./commit local/{{ .name }}/commit
+
+  update.sh: |
+    #!/bin/sh
+    rc alias set local http://{{ include "rustfs.url" $ }} $STORAGE_ACCESS_KEY $STORAGE_SECRET_KEY
+
+    # Get the latest GitHub info
+    RES=$(curl -s \
+      -H "Accept: application/vnd.github+json" \
+      {{ if $.Values.github.secret.name }}  -H "Authorization: Bearer $GITHUB_TOKEN" \ {{ end }}
+      -H "X-GitHub-Api-Version: 2026-03-10" \
+      https://api.github.com/repos/{{ $.Values.github.user }}/{{ .repo }}/releases/latest)
+    NAME=$(echo "$RES" | jq -r '.name')
+    printf $NAME > commit
+    ASSET_ID=$(echo "$RES" | jq -r '.assets[0].id')
+    echo "Latest release $NAME - Downloading asset $ASSET_ID..."
+
+    # Check if already up to date
+    CURRENT=$(rc cat local/{{ .name }}/commit 2>/dev/null || echo "")
+    if [ "$CURRENT" = "$NAME" ]; then
+      echo "Already up to date ($NAME), skipping."
+      exit 0
+    fi
+
+    # Download latest release via API (avoids CDN auth issues with browser_download_url)
+    curl -L -o site.zip \
+      {{ if $.Values.github.secret.name }}  -H "Authorization: Bearer $GITHUB_TOKEN" \ {{ end }}
+      -H "Accept: application/octet-stream" \
+      https://api.github.com/repos/{{ $.Values.github.user }}/{{ .repo }}/releases/assets/$ASSET_ID
+    unzip site.zip
+
+    # Upload to bucket
+    rc cp -r ./dist/ local/{{ .name }}/
+    rc cp ./commit local/{{ .name }}/commit
+{{- end }}

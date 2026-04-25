@@ -1,0 +1,35 @@
+{{- range .Values.sites }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ .name }}-create"
+spec:
+  ttlSecondsAfterFinished: 30
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: "{{ .name }}-create"
+          image: rustfs/rc:latest
+          command: ["/bin/sh", "-c", "/scripts/create.sh"]
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+          env:
+            - name: STORAGE_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.rustfs.secret.existingSecret }}
+                  key: RUSTFS_ACCESS_KEY
+            - name: STORAGE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.rustfs.secret.existingSecret }}
+                  key: RUSTFS_SECRET_KEY
+      volumes:
+        - name: scripts
+          configMap:
+            name: "{{ .name }}-scripts"
+            defaultMode: 0755
+{{- end }}

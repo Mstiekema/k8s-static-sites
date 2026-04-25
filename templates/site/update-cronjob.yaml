@@ -1,0 +1,50 @@
+{{- range .Values.sites }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: "{{ .name }}-sync"
+spec:
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 120
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: "{{ .name }}-sync"
+              image: rustfs/rc:latest
+              command:
+                [
+                  "/bin/sh",
+                  "-c",
+                  "apk add --no-cache curl unzip jq && /scripts/update.sh",
+                ]
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+              env:
+                {{ if $.Values.github.secret.name }}
+                - name: GITHUB_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ $.Values.github.secret.name }}
+                      key: {{ $.Values.github.secret.key }}
+                {{ end }}
+                - name: STORAGE_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ $.Values.rustfs.secret.existingSecret }}
+                      key: RUSTFS_ACCESS_KEY
+                - name: STORAGE_SECRET_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ $.Values.rustfs.secret.existingSecret }}
+                      key: RUSTFS_SECRET_KEY
+          volumes:
+            - name: scripts
+              configMap:
+                name: "{{ .name }}-scripts"
+                defaultMode: 0755
+{{- end }}
