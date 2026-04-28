@@ -25,6 +25,7 @@ rustfs:
   enabled: true
 
   # Values for the rustfs chart
+  fullnameOverride: static-sites-rustfs
   replicaCount: 1
   mode:
     standalone:
