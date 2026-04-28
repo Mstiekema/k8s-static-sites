@@ -20,7 +20,7 @@ data:
     # Get the latest GitHub info
     RES=$(curl -s \
       -H "Accept: application/vnd.github+json" \
-      {{ if $.Values.github.secret.name }}  -H "Authorization: Bearer $GITHUB_TOKEN" \ {{ end }}
+      {{ if $.Values.github.secret.name }}-H "Authorization: Bearer $GITHUB_TOKEN" \{{ end }}
       -H "X-GitHub-Api-Version: 2026-03-10" \
       https://api.github.com/repos/{{ $.Values.github.user }}/{{ .repo }}/releases/latest)
     NAME=$(echo "$RES" | jq -r '.name')
@@ -37,7 +37,7 @@ data:
 
     # Download latest release via API (avoids CDN auth issues with browser_download_url)
     curl -L -o site.zip \
-      {{ if $.Values.github.secret.name }}  -H "Authorization: Bearer $GITHUB_TOKEN" \ {{ end }}
+      {{ if $.Values.github.secret.name }}-H "Authorization: Bearer $GITHUB_TOKEN" \{{ end }}
       -H "Accept: application/octet-stream" \
       https://api.github.com/repos/{{ $.Values.github.user }}/{{ .repo }}/releases/assets/$ASSET_ID
     unzip site.zip
