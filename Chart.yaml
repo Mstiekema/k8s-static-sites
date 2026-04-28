@@ -2,7 +2,7 @@ apiVersion: v2
 name: k8s-static-sites
 description: A Helm Chart to deploy static sites in your kubernetes cluster.
 type: application
-version: 0.1.0
+version: 0.1.1
 appVersion: 1.0.0
 icon: https://2.gravatar.com/avatar/9d3ca092d858a734e6aef6c6d2168a4c21c62c4fce5871bd99c0c159536c5dac?size=256
 
