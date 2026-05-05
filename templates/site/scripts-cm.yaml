@@ -45,4 +45,8 @@ data:
     # Upload to bucket
     rc cp -r ./dist/ local/{{ .name }}/
     rc cp ./commit local/{{ .name }}/commit
+
+    # Cleanup
+    rm -rf ./dist
+    rm site.zip
 {{- end }}
