@@ -12,6 +12,7 @@ data:
 
       location ~* \.(js|css|jpg|jpeg|png|gif|ico|woff2?|svg|eot|ttf|map)$ {
         rewrite ^.*(/assets/.+)$ /{{ .name }}$1 break;
+        rewrite ^.*/([^/]+)$ /{{ .name }}/$1 break;
         proxy_pass http://{{ include "rustfs.url" $ }};
         proxy_set_header Host {{ include "rustfs.url" $ }};
       }
