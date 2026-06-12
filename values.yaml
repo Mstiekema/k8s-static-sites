@@ -7,9 +7,9 @@ github:
   #   key: GITHUB_TOKEN
 
 gatewayApi:
-  parentRef:
-    name: gateway
-    namespace: networking
+  parentRefs:
+    - name: gateway
+      namespace: networking
 
 nginx:
   name: nginx-static

@@ -6,8 +6,10 @@ metadata:
   name: "{{ .name }}-nginx-route"
 spec:
   parentRefs:
-    - name: {{ $.Values.gatewayApi.parentRef.name }}
-      namespace: {{ $.Values.gatewayApi.parentRef.namespace }}
+    {{- range $.Values.gatewayApi.parentRefs }}
+    - name: {{ .name }}
+      namespace: {{ .namespace }}
+    {{- end }}
   hostnames:
     {{- range .urls }}
     - {{ . }}
