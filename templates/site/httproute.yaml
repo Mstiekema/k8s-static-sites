@@ -9,6 +9,7 @@ spec:
     {{- range $.Values.gatewayApi.parentRefs }}
     - name: {{ .name }}
       namespace: {{ .namespace }}
+      {{ if .sectionName }}sectionName: {{.sectionName}}{{ end }}
     {{- end }}
   hostnames:
     {{- range .urls }}

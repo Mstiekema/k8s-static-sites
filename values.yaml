@@ -10,6 +10,7 @@ gatewayApi:
   parentRefs:
     - name: gateway
       namespace: networking
+      # sectionName: https
 
 nginx:
   name: nginx-static
