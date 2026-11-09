@@ -16,9 +16,12 @@ spec:
         - name: "{{ .name }}-create"
           image: rustfs/rc:latest
           command: ["/bin/sh", "-c", "/scripts/create.sh"]
+          workingDir: /workdir
           volumeMounts:
             - name: scripts
               mountPath: /scripts
+            - name: workdir
+              mountPath: /workdir
           env:
             - name: STORAGE_ACCESS_KEY
               valueFrom:
@@ -35,4 +38,6 @@ spec:
           configMap:
             name: "{{ .name }}-scripts"
             defaultMode: 0755
+        - name: workdir
+          emptyDir: {}
 {{- end }}

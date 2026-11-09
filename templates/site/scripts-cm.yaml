@@ -18,14 +18,20 @@ data:
     rc alias set local http://{{ include "rustfs.url" $ }} $STORAGE_ACCESS_KEY $STORAGE_SECRET_KEY
 
     # Get the latest GitHub info
-    RES=$(curl -s \
-      -H "Accept: application/vnd.github+json" \
-      {{ if $.Values.github.secret.name }}-H "Authorization: Bearer $GITHUB_TOKEN" \{{ end }}
-      -H "X-GitHub-Api-Version: 2026-03-10" \
+    RES=$(wget --quiet \
+      --header="Accept: application/vnd.github+json" \
+      --header="X-GitHub-Api-Version: 2026-03-10" \
+      {{ if $.Values.github.secret.name }}--header="Authorization: Bearer $GITHUB_TOKEN" \{{ end }}
+      --output-document - \
       https://api.github.com/repos/{{ $.Values.github.user }}/{{ .repo }}/releases/latest)
-    NAME=$(echo "$RES" | jq -r '.name')
+    RES=$(printf '%s' "$RES" | tr -d ' \n')
+    NAME=$(printf '%s' "$RES" | sed -n 's/.*"tag_name":"\([^"]*\)".*/\1/p')
     printf $NAME > commit
-    ASSET_ID=$(echo "$RES" | jq -r '.assets[0].id')
+    ASSET_ID=$(printf '%s' "$RES" \
+      | sed -n 's/.*"assets":\[\(.*\)\].*/\1/p' \
+      | grep -o '"id":[0-9]*' \
+      | head -n 1 \
+      | cut -d: -f2)
     echo "Latest release $NAME - Downloading asset $ASSET_ID..."
 
     # Check if already up to date
@@ -36,9 +42,9 @@ data:
     fi
 
     # Download latest release via API (avoids CDN auth issues with browser_download_url)
-    curl -L -o site.zip \
-      {{ if $.Values.github.secret.name }}-H "Authorization: Bearer $GITHUB_TOKEN" \{{ end }}
-      -H "Accept: application/octet-stream" \
+    wget --output-document=site.zip \
+      {{ if $.Values.github.secret.name }}--header="Authorization: Bearer $GITHUB_TOKEN" \{{ end }}
+      --header="Accept: application/octet-stream" \
       https://api.github.com/repos/{{ $.Values.github.user }}/{{ .repo }}/releases/assets/$ASSET_ID
     unzip site.zip
 
